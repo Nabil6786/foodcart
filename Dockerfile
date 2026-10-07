@@ -11,4 +11,4 @@ FROM payara/micro:5.2022.5
 
 COPY --from=build /app/target/foodcart.war /opt/payara/foodcart.war
 
-CMD ["--deploy", "/opt/payara/foodcart.war"]
+CMD ["--deploy", "/opt/payara/foodcart.war", "--contextroot", "ROOT", "--port", "10000"]
