@@ -2,26 +2,39 @@ package com.foodcart;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.ejb.Remove;
 import javax.ejb.Stateful;
 
-/**
- * Stateful Session Bean: one instance per client, so the customer name
- * and cart contents are remembered between method calls.
- */
 @Stateful
 public class FoodCartBean implements FoodCart {
 
-    private static final List<String> MENU = Arrays.asList("Pizza", "Burger", "Sandwich");
+    private static final List<String> MENU =
+            Arrays.asList("Pizza", "Burger", "Sandwich");
 
-    // Conversational state - kept for the life of this bean instance
+    private static final Map<String, Double> PRICES =
+            new HashMap<>();
+
+    static {
+        PRICES.put("Pizza", 199.0);
+        PRICES.put("Burger", 129.0);
+        PRICES.put("Sandwich", 99.0);
+    }
+
     private String customerName;
-    private final List<String> cart = new ArrayList<>();
+
+    private final List<String> cart =
+            new ArrayList<>();
 
     @Override
     public void setCustomerName(String customerName) {
-        this.customerName = customerName;
+        if (customerName == null) {
+            this.customerName = null;
+        } else {
+            this.customerName = customerName.trim();
+        }
     }
 
     @Override
@@ -31,23 +44,29 @@ public class FoodCartBean implements FoodCart {
 
     @Override
     public boolean addFoodItem(String item) {
+
         String menuItem = findOnMenu(item);
+
         if (menuItem == null) {
             return false;
         }
+
         cart.add(menuItem);
         return true;
     }
 
     @Override
     public boolean removeFoodItem(String item) {
+
         String menuItem = findOnMenu(item);
-        return menuItem != null && cart.remove(menuItem);
+
+        return menuItem != null &&
+               cart.remove(menuItem);
     }
 
     @Override
     public List<String> viewCart() {
-        return new ArrayList<>(cart); // defensive copy
+        return new ArrayList<>(cart);
     }
 
     @Override
@@ -55,22 +74,47 @@ public class FoodCartBean implements FoodCart {
         cart.clear();
     }
 
+    @Override
+    public double getTotalAmount() {
+
+        double total = 0.0;
+
+        for (String item : cart) {
+
+            Double price = PRICES.get(item);
+
+            if (price != null) {
+                total += price;
+            }
+        }
+
+        return total;
+    }
+
+    @Override
+    public int getCartItemCount() {
+        return cart.size();
+    }
+
     @Remove
     @Override
     public void checkout() {
-        cart.clear(); // container destroys the bean after this method returns
+        cart.clear();
     }
 
-    // Case-insensitive match against the menu; returns the canonical name or null
     private String findOnMenu(String item) {
+
         if (item == null) {
             return null;
         }
-        for (String m : MENU) {
-            if (m.equalsIgnoreCase(item.trim())) {
-                return m;
+
+        for (String menuItem : MENU) {
+
+            if (menuItem.equalsIgnoreCase(item.trim())) {
+                return menuItem;
             }
         }
+
         return null;
     }
 }

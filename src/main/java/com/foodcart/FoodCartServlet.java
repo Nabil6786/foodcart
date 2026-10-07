@@ -1,8 +1,10 @@
 package com.foodcart;
 
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.servlet.ServletException;
@@ -12,101 +14,292 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-/**
- * Demo client. The stateful bean is looked up once per HTTP session and kept
- * in the session, so every later request talks to the SAME bean instance.
- *
- * Try (in one browser tab):
- *   /cart?action=name&value=Nabeel
- *   /cart?action=add&value=Pizza
- *   /cart?action=add&value=Burger
- *   /cart?action=view          -> still shows Pizza, Burger (state maintained)
- *   /cart?action=remove&value=Pizza
- *   /cart?action=clear
- */
 @WebServlet("/cart")
 public class FoodCartServlet extends HttpServlet {
 
     private static final String CART_KEY = "foodCart";
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+    protected void doGet(HttpServletRequest req,
+                          HttpServletResponse resp)
             throws ServletException, IOException {
 
         FoodCart cart = getCart(req.getSession());
+
         String action = req.getParameter("action");
         String value = req.getParameter("value");
-        String message = "";
-
-        if (action != null) {
-            switch (action) {
-                case "name":
-                    cart.setCustomerName(value);
-                    message = "Customer name set to " + value;
-                    break;
-                case "add":
-                    message = cart.addFoodItem(value)
-                            ? value + " added to cart."
-                            : "'" + value + "' is not on the menu (Pizza, Burger, Sandwich).";
-                    break;
-                case "remove":
-                    message = cart.removeFoodItem(value)
-                            ? value + " removed from cart."
-                            : value + " was not in the cart.";
-                    break;
-                case "clear":
-                    cart.clearCart();
-                    message = "Cart cleared.";
-                    break;
-                case "checkout":
-                    cart.checkout();
-                    req.getSession().removeAttribute(CART_KEY);
-                    message = "Checked out. Bean removed.";
-                    break;
-                case "view":
-                default:
-                    break;
-            }
-        }
 
         resp.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = resp.getWriter()) {
-            out.println("<html><body>");
-            out.println("<h2>Online Food Cart</h2>");
-            if (!message.isEmpty()) {
-                out.println("<p><b>" + escape(message) + "</b></p>");
-            }
-            if (req.getSession(false) != null && req.getSession().getAttribute(CART_KEY) != null) {
-                String name = cart.getCustomerName();
-                out.println("<p>Customer: " + (name == null ? "(not set)" : escape(name)) + "</p>");
-                List<String> items = cart.viewCart();
-                out.println("<p>Items in cart (" + items.size() + "):</p><ul>");
-                for (String item : items) {
-                    out.println("<li>" + escape(item) + "</li>");
+
+        if (action == null || action.equals("view")) {
+            sendCartResponse(cart, resp);
+            return;
+        }
+
+        switch (action) {
+
+            case "name":
+
+                cart.setCustomerName(value);
+
+                sendMessage(
+                        resp,
+                        "Welcome, " + value + "!"
+                );
+
+                break;
+
+
+            case "add":
+
+                if (cart.addFoodItem(value)) {
+
+                    sendMessage(
+                            resp,
+                            value + " added to cart."
+                    );
+
+                } else {
+
+                    sendMessage(
+                            resp,
+                            "Invalid food item."
+                    );
                 }
-                out.println("</ul>");
-            }
-            out.println("<p>Menu: Pizza, Burger, Sandwich</p>");
-            out.println("<p>Actions: ?action=name&amp;value=YourName | add | remove | view | clear | checkout</p>");
-            out.println("</body></html>");
+
+                break;
+
+
+            case "remove":
+
+                if (cart.removeFoodItem(value)) {
+
+                    sendMessage(
+                            resp,
+                            value + " removed from cart."
+                    );
+
+                } else {
+
+                    sendMessage(
+                            resp,
+                            value + " was not found in the cart."
+                    );
+                }
+
+                break;
+
+
+            case "clear":
+
+                cart.clearCart();
+
+                sendMessage(
+                        resp,
+                        "Cart cleared successfully."
+                );
+
+                break;
+
+
+            case "checkout":
+
+                cart.checkout();
+
+                req.getSession().removeAttribute(CART_KEY);
+
+                sendMessage(
+                        resp,
+                        "Order completed successfully."
+                );
+
+                break;
+
+
+            default:
+
+                sendMessage(
+                        resp,
+                        "Unknown action."
+                );
+
+                break;
         }
     }
 
-    // Look up the stateful bean once per HTTP session and reuse it
-    private FoodCart getCart(HttpSession session) throws ServletException {
-        FoodCart cart = (FoodCart) session.getAttribute(CART_KEY);
+
+    /**
+     * Sends the current cart information
+     * to the frontend.
+     */
+    private void sendCartResponse(FoodCart cart,
+                                  HttpServletResponse resp)
+            throws IOException {
+
+        List<String> items = cart.viewCart();
+
+        /*
+         * Count quantity of each food item.
+         */
+        Map<String, Integer> quantities =
+                new LinkedHashMap<>();
+
+        for (String item : items) {
+
+            quantities.put(
+                    item,
+                    quantities.getOrDefault(item, 0) + 1
+            );
+        }
+
+
+        StringBuilder html = new StringBuilder();
+
+        html.append("<div class='cart-data'>");
+
+
+        // Customer name
+        html.append("<div id='customerNameFromServer'>");
+
+        if (cart.getCustomerName() != null) {
+            html.append(
+                    escape(cart.getCustomerName())
+            );
+        }
+
+        html.append("</div>");
+
+
+        // Cart items
+        html.append("<ul>");
+
+        for (Map.Entry<String, Integer> entry
+                : quantities.entrySet()) {
+
+            String item = entry.getKey();
+            int quantity = entry.getValue();
+
+            html.append("<li data-item='")
+                    .append(escape(item))
+                    .append("'>");
+
+            html.append("<span class='item-name'>")
+                    .append(escape(item))
+                    .append("</span>");
+
+            html.append(
+                    "<span class='item-quantity'>"
+            )
+            .append(" × ")
+            .append(quantity)
+            .append("</span>");
+
+            html.append("</li>");
+        }
+
+        html.append("</ul>");
+
+
+        // Total item count
+        html.append(
+                "<div id='cartItemCount'>"
+        );
+
+        html.append(cart.getCartItemCount());
+
+        html.append("</div>");
+
+
+        // Total amount
+        html.append(
+                "<div id='cartTotal'>"
+        );
+
+        html.append(
+                String.format(
+                        "₹%.2f",
+                        cart.getTotalAmount()
+                )
+        );
+
+        html.append("</div>");
+
+
+        html.append("</div>");
+
+        resp.getWriter().write(
+                html.toString()
+        );
+    }
+
+
+    /**
+     * Sends a simple message to the frontend.
+     */
+    private void sendMessage(HttpServletResponse resp,
+                             String message)
+            throws IOException {
+
+        resp.getWriter().write(
+                "<div class='server-message'>" +
+                escape(message) +
+                "</div>"
+        );
+    }
+
+
+    /**
+     * Gets the same Stateful Session Bean
+     * for the current HTTP session.
+     */
+    private FoodCart getCart(HttpSession session)
+            throws ServletException {
+
+        FoodCart cart =
+                (FoodCart) session.getAttribute(CART_KEY);
+
         if (cart == null) {
+
             try {
-                cart = (FoodCart) new InitialContext().lookup("java:module/FoodCartBean");
-                session.setAttribute(CART_KEY, cart);
+
+                cart = (FoodCart) new InitialContext()
+                        .lookup(
+                                "java:module/FoodCartBean"
+                        );
+
+                session.setAttribute(
+                        CART_KEY,
+                        cart
+                );
+
             } catch (NamingException e) {
-                throw new ServletException("Could not look up FoodCartBean", e);
+
+                throw new ServletException(
+                        "Could not look up FoodCartBean",
+                        e
+                );
             }
         }
+
         return cart;
     }
 
-    private static String escape(String s) {
-        return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+
+    /**
+     * Prevents HTML characters from
+     * being inserted directly into the page.
+     */
+    private static String escape(String value) {
+
+        if (value == null) {
+            return "";
+        }
+
+        return value
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'", "&#39;");
     }
 }

@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Online Food Cart</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- HEADER -->
+    <header class="header">
+
+        <div class="header-content">
+
+            <div>
+                <h1>🍴 Online Food Cart</h1>
+                <p>Fresh food. Simple ordering.</p>
+            </div>
+
+            <div class="cart-badge">
+                🛒 Cart
+                <span id="cartCount">0</span>
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <main class="container">
+
+        <!-- CUSTOMER SECTION -->
+        <section class="customer-section">
+
+            <h2>Welcome!</h2>
+
+            <p>
+                Enter your name to start your order.
+            </p>
+
+            <div class="customer-form">
+
+                <input
+                    type="text"
+                    id="customerName"
+                    placeholder="Enter customer name">
+
+                <button onclick="setCustomerName()">
+                    Start Order
+                </button>
+
+            </div>
+
+            <p
+                id="customerMessage"
+                class="message">
+            </p>
+
+        </section>
+
+
+        <!-- MENU SECTION -->
+        <section class="menu-section">
+
+            <div class="section-title">
+
+                <div>
+
+                    <h2>Our Menu</h2>
+
+                    <p>
+                        Select your favourite food items
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="food-grid">
+
+
+                <!-- PIZZA -->
+                <div class="food-card">
+
+                    <div class="food-image">
+                        🍕
+                    </div>
+
+                    <h3>Pizza</h3>
+
+                    <p>
+                        Delicious cheesy pizza
+                    </p>
+
+                    <div class="food-bottom">
+
+                        <span class="price">
+                            ₹199
+                        </span>
+
+                        <button
+                            onclick="addItem('Pizza')">
+                            Add to Cart
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- BURGER -->
+                <div class="food-card">
+
+                    <div class="food-image">
+                        🍔
+                    </div>
+
+                    <h3>Burger</h3>
+
+                    <p>
+                        Fresh and tasty burger
+                    </p>
+
+                    <div class="food-bottom">
+
+                        <span class="price">
+                            ₹129
+                        </span>
+
+                        <button
+                            onclick="addItem('Burger')">
+                            Add to Cart
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- SANDWICH -->
+                <div class="food-card">
+
+                    <div class="food-image">
+                        🥪
+                    </div>
+
+                    <h3>Sandwich</h3>
+
+                    <p>
+                        Fresh vegetable sandwich
+                    </p>
+
+                    <div class="food-bottom">
+
+                        <span class="price">
+                            ₹99
+                        </span>
+
+                        <button
+                            onclick="addItem('Sandwich')">
+                            Add to Cart
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- CART SECTION -->
+        <section class="cart-section">
+
+            <div class="cart-header">
+
+                <div>
+
+                    <h2>🛒 Your Cart</h2>
+
+                    <p>
+                        Items selected for your order
+                    </p>
+
+                </div>
+
+                <button
+                    class="secondary-btn"
+                    onclick="viewCart()">
+
+                    Refresh Cart
+
+                </button>
+
+            </div>
+
+
+            <!-- CART ITEMS -->
+            <div
+                id="cartItems"
+                class="cart-items">
+
+                <div class="empty-cart">
+
+                    Your cart is empty.
+
+                </div>
+
+            </div>
+
+
+            <!-- CART SUMMARY -->
+            <div class="cart-summary">
+
+                <div>
+
+                    <span>
+                        Total Items
+                    </span>
+
+                    <strong id="totalItems">
+                        0
+                    </strong>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        Total Amount
+                    </span>
+
+                    <strong id="totalAmount">
+                        ₹0.00
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <!-- CART ACTIONS -->
+            <div class="cart-actions">
+
+                <button
+                    class="danger-btn"
+                    onclick="clearCart()">
+
+                    Clear Cart
+
+                </button>
+
+
+                <button
+                    class="checkout-btn"
+                    onclick="checkout()">
+
+                    Checkout
+
+                </button>
+
+            </div>
+
+
+            <div
+                id="cartMessage"
+                class="message">
+            </div>
+
+        </section>
+
+
+        <!-- STATEFUL BEAN SECTION -->
+        <section class="state-section">
+
+            <div class="state-icon">
+                ✓
+            </div>
+
+            <div>
+
+                <h3>
+                    Stateful Session Bean
+                </h3>
+
+                <p>
+                    Your cart state is maintained
+                    between operations using a
+                    Stateful Session Bean.
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- FOOTER -->
+    <footer>
+
+        <p>
+            Online Food Cart |
+            Java EE Stateful Session Bean
+        </p>
+
+    </footer>
+
+
+    <script>
+
+        function getBaseUrl() {
+
+            return "cart";
+
+        }
+
+
+        // --------------------------------
+        // SET CUSTOMER NAME
+        // --------------------------------
+
+        function setCustomerName() {
+
+            const name =
+                document
+                    .getElementById("customerName")
+                    .value
+                    .trim();
+
+
+            if (name === "") {
+
+                document
+                    .getElementById("customerMessage")
+                    .innerText =
+                    "Please enter your name.";
+
+                return;
+            }
+
+
+            fetch(
+                getBaseUrl() +
+                "?action=name&value=" +
+                encodeURIComponent(name)
+            )
+
+            .then(response =>
+                response.text()
+            )
+
+            .then(() => {
+
+                document
+                    .getElementById("customerMessage")
+                    .innerText =
+                    "Welcome, " +
+                    name +
+                    "! Your order has started.";
+
+                viewCart();
+
+            })
+
+            .catch(() => {
+
+                document
+                    .getElementById("customerMessage")
+                    .innerText =
+                    "Unable to connect to the server.";
+
+            });
+
+        }
+
+
+        // --------------------------------
+        // ADD ITEM
+        // --------------------------------
+
+        function addItem(item) {
+
+            fetch(
+                getBaseUrl() +
+                "?action=add&value=" +
+                encodeURIComponent(item)
+            )
+
+            .then(response =>
+                response.text()
+            )
+
+            .then(() => {
+
+                document
+                    .getElementById("cartMessage")
+                    .innerText =
+                    item +
+                    " added to your cart.";
+
+                viewCart();
+
+            })
+
+            .catch(() => {
+
+                document
+                    .getElementById("cartMessage")
+                    .innerText =
+                    "Unable to add item.";
+
+            });
+
+        }
+
+
+        // --------------------------------
+        // REMOVE ITEM
+        // --------------------------------
+
+        function removeItem(item) {
+
+            fetch(
+                getBaseUrl() +
+                "?action=remove&value=" +
+                encodeURIComponent(item)
+            )
+
+            .then(response =>
+                response.text()
+            )
+
+            .then(() => {
+
+                document
+                    .getElementById("cartMessage")
+                    .innerText =
+                    item +
+                    " removed from cart.";
+
+                viewCart();
+
+            })
+
+            .catch(() => {
+
+                document
+                    .getElementById("cartMessage")
+                    .innerText =
+                    "Unable to remove item.";
+
+            });
+
+        }
+
+
+        // --------------------------------
+        // VIEW CART
+        // --------------------------------
+
+        function viewCart() {
+
+            fetch(
+                getBaseUrl() +
+                "?action=view"
+            )
+
+            .then(response =>
+                response.text()
+            )
+
+            .then(html => {
+
+                const parser =
+                    new DOMParser();
+
+                const doc =
+                    parser.parseFromString(
+                        html,
+                        "text/html"
+                    );
+
+
+                const items =
+                    Array.from(
+                        doc.querySelectorAll(
+                            "li[data-item]"
+                        )
+                    );
+
+
+                const cartContainer =
+                    document.getElementById(
+                        "cartItems"
+                    );
+
+
+                const totalItems =
+                    doc.getElementById(
+                        "cartItemCount"
+                    );
+
+
+                const totalAmount =
+                    doc.getElementById(
+                        "cartTotal"
+                    );
+
+
+                // Update total items
+                if (totalItems) {
+
+                    document
+                        .getElementById(
+                            "totalItems"
+                        )
+                        .innerText =
+                        totalItems.innerText;
+
+                    document
+                        .getElementById(
+                            "cartCount"
+                        )
+                        .innerText =
+                        totalItems.innerText;
+
+                }
+
+
+                // Update total amount
+                if (totalAmount) {
+
+                    document
+                        .getElementById(
+                            "totalAmount"
+                        )
+                        .innerText =
+                        totalAmount.innerText;
+
+                }
+
+
+                // Empty cart
+                if (items.length === 0) {
+
+                    cartContainer.innerHTML =
+                        '<div class="empty-cart">' +
+                        'Your cart is empty.' +
+                        '</div>';
+
+                    return;
+
+                }
+
+
+                // Display cart items
+                cartContainer.innerHTML = "";
+
+
+                items.forEach(itemElement => {
+
+                    const item =
+                        itemElement.dataset.item;
+
+
+                    const nameElement =
+                        itemElement.querySelector(
+                            ".item-name"
+                        );
+
+
+                    const quantityElement =
+                        itemElement.querySelector(
+                            ".item-quantity"
+                        );
+
+
+                    const div =
+                        document.createElement(
+                            "div"
+                        );
+
+                    div.className =
+                        "cart-item";
+
+
+                    const left =
+                        document.createElement(
+                            "div"
+                        );
+
+                    left.className =
+                        "cart-item-left";
+
+
+                    left.innerHTML =
+                        "<strong>" +
+                        nameElement.innerText +
+                        "</strong>" +
+                        " " +
+                        quantityElement.innerText;
+
+
+                    const removeButton =
+                        document.createElement(
+                            "button"
+                        );
+
+
+                    removeButton.className =
+                        "remove-btn";
+
+
+                    removeButton.innerText =
+                        "Remove";
+
+
+                    removeButton.onclick =
+                        function () {
+
+                            removeItem(item);
+
+                        };
+
+
+                    div.appendChild(left);
+
+                    div.appendChild(
+                        removeButton
+                    );
+
+
+                    cartContainer.appendChild(
+                        div
+                    );
+
+                });
+
+            })
+
+            .catch(() => {
+
+                document
+                    .getElementById(
+                        "cartMessage"
+                    )
+                    .innerText =
+                    "Unable to load cart.";
+
+            });
+
+        }
+
+
+        // --------------------------------
+        // CLEAR CART
+        // --------------------------------
+
+        function clearCart() {
+
+            fetch(
+                getBaseUrl() +
+                "?action=clear"
+            )
+
+            .then(response =>
+                response.text()
+            )
+
+            .then(() => {
+
+                document
+                    .getElementById(
+                        "cartMessage"
+                    )
+                    .innerText =
+                    "Cart cleared successfully.";
+
+                viewCart();
+
+            });
+
+        }
+
+
+        // --------------------------------
+        // CHECKOUT
+        // --------------------------------
+
+        function checkout() {
+
+            fetch(
+                getBaseUrl() +
+                "?action=checkout"
+            )
+
+            .then(response =>
+                response.text()
+            )
+
+            .then(() => {
+
+                document
+                    .getElementById(
+                        "cartMessage"
+                    )
+                    .innerText =
+                    "Order completed successfully. Thank you!";
+
+
+                document
+                    .getElementById(
+                        "cartItems"
+                    )
+                    .innerHTML =
+                    '<div class="empty-cart">' +
+                    'Order completed.' +
+                    '</div>';
+
+
+                document
+                    .getElementById(
+                        "cartCount"
+                    )
+                    .innerText =
+                    "0";
+
+
+                document
+                    .getElementById(
+                        "totalItems"
+                    )
+                    .innerText =
+                    "0";
+
+
+                document
+                    .getElementById(
+                        "totalAmount"
+                    )
+                    .innerText =
+                    "₹0.00";
+
+            });
+
+        }
+
+    </script>
+
+</body>
+
+</html>

@@ -1,31 +1,41 @@
+
 package com.foodcart;
 
 import java.util.List;
 import javax.ejb.Local;
 
 /**
- * Business interface for the Online Food Cart.
+ * Local business interface for the Online Food Cart.
+ *
+ * The interface defines the operations that can be
+ * performed on the customer's cart.
  */
 @Local
 public interface FoodCart {
 
-    /** Accept and store the customer's name. */
+    // Customer information
     void setCustomerName(String customerName);
 
     String getCustomerName();
 
-    /** Add a food item (Pizza, Burger or Sandwich). Returns false if not on the menu. */
+
+    // Cart operations
     boolean addFoodItem(String item);
 
-    /** Remove one occurrence of a food item. Returns false if it was not in the cart. */
     boolean removeFoodItem(String item);
 
-    /** View the current items in the cart. */
     List<String> viewCart();
 
-    /** Remove everything from the cart. */
     void clearCart();
 
-    /** Ends the session and releases the bean instance. */
+
+    // Price and order information
+    double getTotalAmount();
+
+    int getCartItemCount();
+
+
+    // Ends the Stateful Session Bean
     void checkout();
 }
+
