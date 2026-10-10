@@ -1,3 +1,4 @@
+
 FROM maven:3.8.6-eclipse-temurin-11 AS build
 
 WORKDIR /app
@@ -9,6 +10,7 @@ RUN mvn clean package -DskipTests
 
 FROM payara/micro:5.2022.5
 
-COPY --from=build /app/target/foodcart.war /opt/payara/deployments/foodcart.war
+COPY --from=build /app/target/foodcart.war /opt/payara/foodcart.war
 
-CMD ["--port", "10000"]
+CMD ["--deploy", "/opt/payara/foodcart.war", "--contextroot", "ROOT", "--port", "10000"]
+
